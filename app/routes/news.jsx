@@ -1,8 +1,8 @@
-
+import { bingNewsSearch } from "~/models/news/news.server";
 import { refineSearchTerm } from "~/models/ai/searchbot.server";
-// import { json } from "@remix-run/server-runtime";
+import { json } from "@remix-run/server-runtime";
 
-import { useLoaderData, Link, Form, Outlet, useActionData } from "@remix-run/react";
+import { useLoaderData, Link, Form, Outlet, useActionData, useNavigation } from "@remix-run/react";
 
 
 // 
@@ -18,17 +18,21 @@ export async function action({ request }) {
   }
   try {
     const result = await refineSearchTerm(searchTerm);
-    console.log(result);
     const refinedResult = result.data.choices[0].message.content;
-    return refinedResult;
+    const searchResults = await bingNewsSearch(refinedResult);
+    console.log('searchresults news.jsx23:',refinedResult);
+    console.log('searchresults news.jsx24:',searchResults);
+     return {refinedResult, searchResults}
   } catch (error) {
     throw error;
   }
 }
 }
 
+
 export default function NewsPage() {
-  const data = useActionData();
+  const  data  = useActionData() ?? {};
+  console.log(data);
 
   return (
     <div className="flex h-full min-h-screen flex-col">
@@ -55,7 +59,7 @@ export default function NewsPage() {
               search</button>
           </Form>
           <hr />
-          {data? <p>Searching for: {data}</p> : <p>&nbsp;</p>}
+          {/* {data? <p>Searching for: {data}</p> : <p>&nbsp;</p>} */}
         </div>
         <div className="flex-1 p-6">
           <Outlet />
