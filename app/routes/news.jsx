@@ -9,32 +9,32 @@ import NewsCard from "./news.newsId";
 
 export async function action({ request }) {
   if (request.method.toLowerCase() === "post") {
-  const body = await request.formData();
-  const searchTerm = body.get("search");
-  
-  if(!searchTerm || searchTerm.trim().length < 4){
-    console.log('Search is invalid');
-    return null;
+    const body = await request.formData();
+    const searchTerm = body.get("search");
+
+    if (!searchTerm || searchTerm.trim().length < 4) {
+      console.log('Search is invalid');
+      return null;
+    }
+    try {
+      const result = await refineSearchTerm(searchTerm);
+      const refinedResult = result.data.choices[0].message.content;
+      const searchResults = await bingNewsSearch(refinedResult);
+      console.log('searchresults news.jsx23:', refinedResult);
+      console.log('searchresults news.jsx24:', searchResults);
+      return json(searchResults);
+    } catch (error) {
+      throw error;
+    }
   }
-  try {
-    const result = await refineSearchTerm(searchTerm);
-    const refinedResult = result.data.choices[0].message.content;
-    const searchResults = await bingNewsSearch(refinedResult);
-    console.log('searchresults news.jsx23:',refinedResult);
-    console.log('searchresults news.jsx24:',searchResults);
-     return json(searchResults)
-  } catch (error) {
-    throw error;
-  }
-}
 }
 
 
 
 
 export default function NewsPage() {
-  const  actionData  =  useActionData() ?? [];
-  console.log('ActionData:',actionData);
+  const actionData = useActionData() ?? [];
+  console.log('ActionData:', actionData);
 
 
   return (
@@ -53,7 +53,7 @@ export default function NewsPage() {
           </button>
         </Form>
       </header>
-    
+
       <main className="flex h-full bg-white">
         <div className="h-full w-80 border-r bg-gray-50">
           <Form method="post" className="block p-4 text-xl border-spacing-1">
@@ -65,8 +65,9 @@ export default function NewsPage() {
           {/* {data? <p>Searching for: {data}</p> : <p>&nbsp;</p>} */}
         </div>
         <div className="flex-1 p-6">
-        {actionData.map((newsItem) => {
-            return <NewsCard key={newsItem.datePublished} data={newsItem} />;
+          {actionData.map((newsItem) => {
+            const uniqueId = Math.random().toString(32).slice(2);
+            return <NewsCard key={uniqueId} data={newsItem} />;
           })}
           <Outlet />
         </div>
@@ -76,18 +77,3 @@ export default function NewsPage() {
 }
 
 
-// export async function loader() {
-  
-//   try {
-//     const result = await refineSearchTerm();
-//     console.log("Status:", result.status);
-//     console.log("Status Text:", result.statusText);
-//     console.log("Request ID:", result.headers['x-request-id']);
-//     console.log("Tokens used:", result.data.usage.total_tokens);
-//     console.log("Refined search term:", result.data.choices[0].message.content);
-//     const refinedSearchTerm = result.data.choices[0].message.content;
-//     return json({ refinedSearchTerm });
-//   } catch (error) {
-//     throw error;
-//   }
-// }

@@ -22,6 +22,7 @@ export async function bingNewsSearch(search) {
   try {
     const response = await fetch(url, requestOptions);
     const result = await response.json();
+    console.log(result.totalEstimatedMatches);
     return result.value;
   } catch (error) {
     console.log('error', error);

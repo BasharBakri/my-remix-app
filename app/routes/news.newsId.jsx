@@ -13,13 +13,13 @@ export default function NewsCard({ data }) {
     <div className="news-card">
       <h3 className="text-2xl font-bold">{name}</h3>
       <p className="py-6">{description}</p>
-      <a href={url} target="_blank" rel="noopener noreferrer">
+      <a className="flex-1 rounded-md border-2 border-blue-500 px-3 text-sm" href={url} target="_blank" rel="noopener noreferrer">
         {url}
       </a>
       <hr className="my-4" />
       <p>{new Date(datePublished).toLocaleDateString()}</p>
       <hr className="my-4" />
-      {/* <img src={image} alt="News" /> // uncomment this line to render the image */}
+      {/* <img src={image} alt="News" />  */}
     </div>
   );
 };
