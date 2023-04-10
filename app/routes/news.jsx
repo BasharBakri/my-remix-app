@@ -2,9 +2,9 @@ import { bingNewsSearch } from "~/models/news/news.server";
 import { refineSearchTerm } from "~/models/ai/searchbot.server";
 import { json } from "@remix-run/server-runtime";
 
-import { useLoaderData, Link, Form, Outlet, useActionData, useNavigation } from "@remix-run/react";
+import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation } from "@remix-run/react";
 
-
+import NewsCard from "./news.newsId";
 // 
 
 export async function action({ request }) {
@@ -22,7 +22,7 @@ export async function action({ request }) {
     const searchResults = await bingNewsSearch(refinedResult);
     console.log('searchresults news.jsx23:',refinedResult);
     console.log('searchresults news.jsx24:',searchResults);
-     return {refinedResult, searchResults}
+     return json(searchResults)
   } catch (error) {
     throw error;
   }
@@ -30,9 +30,12 @@ export async function action({ request }) {
 }
 
 
+
+
 export default function NewsPage() {
-  const  data  = useActionData() ?? {};
-  console.log(data);
+  const  actionData  =  useActionData() ?? [];
+  console.log('ActionData:',actionData);
+
 
   return (
     <div className="flex h-full min-h-screen flex-col">
@@ -50,7 +53,7 @@ export default function NewsPage() {
           </button>
         </Form>
       </header>
-
+    
       <main className="flex h-full bg-white">
         <div className="h-full w-80 border-r bg-gray-50">
           <Form method="post" className="block p-4 text-xl border-spacing-1">
@@ -62,6 +65,9 @@ export default function NewsPage() {
           {/* {data? <p>Searching for: {data}</p> : <p>&nbsp;</p>} */}
         </div>
         <div className="flex-1 p-6">
+        {actionData.map((newsItem) => {
+            return <NewsCard key={newsItem.datePublished} data={newsItem} />;
+          })}
           <Outlet />
         </div>
       </main>
