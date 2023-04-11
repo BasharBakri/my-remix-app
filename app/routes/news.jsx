@@ -2,10 +2,11 @@ import { bingNewsSearch } from "~/models/news/news.server";
 import { refineSearchTerm } from "~/models/ai/searchbot.server";
 import { json } from "@remix-run/server-runtime";
 
+
 import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, NavLink } from "@remix-run/react";
 
 import NewsCard from "./news.newsId";
-
+import MyComponent from "./summary";
 
 export async function action({ request }) {
   if (request.method.toLowerCase() === "post") {
@@ -18,11 +19,18 @@ export async function action({ request }) {
     }
     try {
       const result = await refineSearchTerm(searchTerm);
-      const refinedResult = result.data.choices[0].message.content.slice(1, -1);
+      const refinedResult = result.data.choices[0].message.content.slice(0, -1);
       const searchResults = await bingNewsSearch(refinedResult);
       console.log('searchresults news.jsx23:', refinedResult);
       console.log('searchresults news.jsx24:', searchResults);
-      return json(searchResults);
+      const responseObject = {
+        searchResults: searchResults,
+        refinedResult: refinedResult,
+      };
+
+      // Return the responseObject
+      return json(responseObject);
+
     } catch (error) {
       throw error;
     }
@@ -35,6 +43,8 @@ export async function action({ request }) {
 export default function NewsPage() {
   const navigation = useNavigation();
   const actionData = useActionData() ?? [];
+  const searchData = actionData.searchResults ?? [];
+  const refinedData = actionData.refinedResult;
   console.log('ActionData:', actionData);
 
 
@@ -67,9 +77,9 @@ export default function NewsPage() {
       <main className="flex h-full bg-white">
         <div className="h-full w-80 border-r bg-gray-50">
           <Form method="post" className="block p-4 text-xl border-spacing-1">
-            <input type="text" name="search" placeholder="search" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-            <button type="submit" className="bg-gray-900 hover:bg-blue-700 text-white font-bold py-1 px-1 border border-gray-800 rounded">
-              {isSubmitting ? "Searching..." : "Search"}</button>
+            <input type="text" name="search" placeholder="search" className=" border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
+            <button type="submit" className="bg-gray-900 hover:bg-blue-700 text-white font-bold py-0.5 px-0.8 border border-gray-800 rounded inline">
+              {isSubmitting ? "🔎..." : "🔍"}</button>
           </Form>
           <hr />
           <ol>
@@ -77,11 +87,11 @@ export default function NewsPage() {
             <li>
               <NavLink
                 className={({ isActive }) =>
-                  `block border-b p-4 text-xl  }`
+                  `block border-b p-4 text-xs  }`
                 }
                 to='.'
               >
-                🔍 Search
+                🔍 {refinedData ? `Results for ${refinedData} ` : ''}
               </NavLink>
             </li>
             <li>
@@ -119,12 +129,14 @@ export default function NewsPage() {
 
         </div>
         <div className="flex-1 p-6">
-          {isSubmitting ? <p>Loading...</p> : actionData.map((newsItem) => {
+
+
+          {isSubmitting ? <p>Loading...</p> : searchData.map((newsItem) => {
             const uniqueId = Math.random().toString(32).slice(2);
             return <NewsCard key={uniqueId} data={newsItem} />;
           })}
-          <Outlet />
         </div>
+        <Outlet />
       </main>
     </div>
   );

@@ -9,7 +9,7 @@ export default function NewsCard({ data }) {
   console.log('newsCard jsx10', name);
 
   return (
-    <div className="news-card">
+    <div className='mt-2'>
       <h3 className="text-2xl font-bold">{name}</h3>
       <p className="py-6">{description}</p>
       <a className="flex-1  text-blue-500 underline" href={url} target="_blank" rel="noopener noreferrer">

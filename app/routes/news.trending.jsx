@@ -1,4 +1,6 @@
-import { refineSearchTerm } from "~/models/ai/searchbot.server";
+import { getTrendingNews } from "~/models/news/trendingnews.server";
+
+
 
 
 
