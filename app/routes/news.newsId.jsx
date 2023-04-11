@@ -6,14 +6,13 @@ export default function NewsCard({ data }) {
     url,
     // image, // uncomment this if you have image data
   } = data;
-  console.log('newsCard jsx9', typeof data);
   console.log('newsCard jsx10', name);
 
   return (
     <div className="news-card">
       <h3 className="text-2xl font-bold">{name}</h3>
       <p className="py-6">{description}</p>
-      <a className="flex-1 rounded-md border-2 border-blue-500 px-3 text-sm" href={url} target="_blank" rel="noopener noreferrer">
+      <a className="flex-1  text-blue-500 underline" href={url} target="_blank" rel="noopener noreferrer">
         {url}
       </a>
       <hr className="my-4" />

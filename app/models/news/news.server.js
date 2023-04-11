@@ -4,10 +4,10 @@ export async function bingNewsSearch(search) {
   const subscriptionKey = process.env.BING_API_KEY;
   const host = "api.bing.microsoft.com";
   const path = "/v7.0/news/search";
-  const count = 10;
+  const count = 15;
   const freshness = "Month";
   const sortBy = "relevance";
-  const offset = 5555;
+  const offset = 0;
   const mkt = "en-WW";
 
   const url = `https://${host}${path}?q=${encodeURIComponent(search)}&count=${count}&freshness=${freshness}&sortBy=${sortBy}&offset=${offset}&mkt=${mkt}`;
@@ -22,7 +22,7 @@ export async function bingNewsSearch(search) {
   try {
     const response = await fetch(url, requestOptions);
     const result = await response.json();
-    console.log(result.totalEstimatedMatches);
+    console.log('Estimated results newsserver 25', result.totalEstimatedMatches);
     return result.value;
   } catch (error) {
     console.log('error', error);

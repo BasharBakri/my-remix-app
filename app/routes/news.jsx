@@ -18,7 +18,7 @@ export async function action({ request }) {
     }
     try {
       const result = await refineSearchTerm(searchTerm);
-      const refinedResult = result.data.choices[0].message.content;
+      const refinedResult = result.data.choices[0].message.content.slice(1, -1);
       const searchResults = await bingNewsSearch(refinedResult);
       console.log('searchresults news.jsx23:', refinedResult);
       console.log('searchresults news.jsx24:', searchResults);
@@ -33,8 +33,18 @@ export async function action({ request }) {
 
 
 export default function NewsPage() {
+  const navigation = useNavigation();
   const actionData = useActionData() ?? [];
   console.log('ActionData:', actionData);
+
+
+
+  const isSubmitting = navigation.state === 'submitting';
+
+
+
+
+
 
 
   return (
@@ -59,13 +69,13 @@ export default function NewsPage() {
           <Form method="post" className="block p-4 text-xl border-spacing-1">
             <input type="text" name="search" placeholder="search" />
             <button type="submit" className="bg-gray-900 hover:bg-blue-700 text-white font-bold py-1 px-1 border border-gray-800 rounded">
-              search</button>
+              {isSubmitting ? "Searching..." : "Search"}</button>
           </Form>
           <hr />
           {/* {data? <p>Searching for: {data}</p> : <p>&nbsp;</p>} */}
         </div>
         <div className="flex-1 p-6">
-          {actionData.map((newsItem) => {
+          {isSubmitting ? <p>Loading...</p> : actionData.map((newsItem) => {
             const uniqueId = Math.random().toString(32).slice(2);
             return <NewsCard key={uniqueId} data={newsItem} />;
           })}
