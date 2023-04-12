@@ -4,7 +4,7 @@ export async function bingNewsSearch(search) {
   const subscriptionKey = process.env.BING_API_KEY;
   const host = "api.bing.microsoft.com";
   const path = "/v7.0/news/search";
-  const count = 15;
+  const count = 8;
   const freshness = "Month";
   const sortBy = "relevance";
   const offset = 0;

@@ -1,12 +1,14 @@
 import { bingNewsSearch } from "~/models/news/news.server";
 import { refineSearchTerm } from "~/models/ai/searchbot.server";
+import { summarizeSearch } from "~/models/ai/summarybot.server";
 import { json } from "@remix-run/server-runtime";
-
 
 import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, NavLink } from "@remix-run/react";
 
 import NewsCard from "./news.newsId";
-import MyComponent from "./summary";
+
+import Summary from "./news.summary";
+
 
 export async function action({ request }) {
   if (request.method.toLowerCase() === "post") {
@@ -22,10 +24,20 @@ export async function action({ request }) {
       const refinedResult = result.data.choices[0].message.content.slice(0, -1);
       const searchResults = await bingNewsSearch(refinedResult);
       console.log('searchresults news.jsx23:', refinedResult);
-      console.log('searchresults news.jsx24:', searchResults);
+      const summaryArray = searchResults.map((oneResult) => {
+        return {
+          name: oneResult.name,
+          description: oneResult.description
+        };
+      });
+
+      const summaryResponse = await summarizeSearch(refinedResult, summaryArray);
+      const summaryResult = summaryResponse.data.choices[0].message.content;
+      console.log(summaryResult);
       const responseObject = {
         searchResults: searchResults,
         refinedResult: refinedResult,
+        summaryResult: summaryResult
       };
 
       // Return the responseObject
@@ -44,6 +56,7 @@ export default function NewsPage() {
   const navigation = useNavigation();
   const actionData = useActionData() ?? [];
   const searchData = actionData.searchResults ?? [];
+  const summaryResult = actionData.summaryResult ?? '';
   const refinedData = actionData.refinedResult;
   console.log('ActionData:', actionData);
 
@@ -128,15 +141,24 @@ export default function NewsPage() {
           </ol>
 
         </div>
+        <Outlet />
         <div className="flex-1 p-6">
 
+          {
+            summaryResult.length > 1 ? (
+              isSubmitting ? (
+                <p>Loading...</p>
+              ) : (
+                <Summary summary={summaryResult} />
+              )
+            ) : null
+          }
 
-          {isSubmitting ? <p>Loading...</p> : searchData.map((newsItem) => {
+          {isSubmitting ?? isSubmitting ? <p>Loading...</p> : searchData.map((newsItem) => {
             const uniqueId = Math.random().toString(32).slice(2);
             return <NewsCard key={uniqueId} data={newsItem} />;
           })}
         </div>
-        <Outlet />
       </main>
     </div>
   );

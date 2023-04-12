@@ -6,7 +6,7 @@ export default function NewsCard({ data }) {
     url,
     // image, // uncomment this if you have image data
   } = data;
-  console.log('newsCard jsx10', name);
+
 
   return (
     <div className='mt-2'>
