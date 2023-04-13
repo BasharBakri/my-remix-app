@@ -1,3 +1,9 @@
+
+
+// export async function loader(){
+
+// }
+
 export default function NewsCard({ data }) {
   const {
     datePublished,

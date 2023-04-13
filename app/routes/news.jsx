@@ -5,7 +5,7 @@ import { json } from "@remix-run/server-runtime";
 
 import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, NavLink } from "@remix-run/react";
 
-import NewsCard from "./news.newsId";
+import NewsCard from "./news.$newsId";
 
 import Summary from "./news.summary";
 
@@ -88,10 +88,10 @@ export default function NewsPage() {
       </header>
 
       <main className="flex h-full bg-white">
-        <div className="h-full w-80 border-r bg-gray-50">
-          <Form method="post" className="block p-4 text-xl border-spacing-1">
-            <input type="text" name="search" placeholder="search" className=" border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-            <button type="submit" className="bg-gray-900 hover:bg-blue-700 text-white font-bold py-0.5 px-0.8 border border-gray-800 rounded inline">
+        <div className="h-full w-80 border-r bg-gray-50 ">
+          <Form method="post" className="flex items-center mt-4">
+            <input type="text" name="search" placeholder="search" className=" border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
+            <button type="submit" className="bg-gray-900 hover:bg-blue-700 text-white font-bold px-4 py-2 border border-gray-800 rounded inline">
               {isSubmitting ? "🔎..." : "🔍"}</button>
           </Form>
           <hr />
@@ -138,11 +138,25 @@ export default function NewsPage() {
               </NavLink>
             </li>
 
-          </ol>
 
+          </ol>
+          <form className="flex items-center mt-4">
+            <input
+              type="text"
+              placeholder="Describe your Theme!"
+              className="border-2 border-gray-300 rounded-l-md py-2 px-4 w-full focus:outline-none focus:border-gray-500"
+            />
+            <button
+              type="submit"
+              className="bg-gray-500 text-white font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600"
+            >
+              💻
+            </button>
+          </form>
         </div>
-        <Outlet />
+
         <div className="flex-1 p-6">
+          <Outlet />
 
           {
             summaryResult.length > 1 ? (
@@ -151,7 +165,7 @@ export default function NewsPage() {
               ) : (
                 <Summary summary={summaryResult} />
               )
-            ) : null
+            ) : <p></p>
           }
 
           {isSubmitting ?? isSubmitting ? <p>Loading...</p> : searchData.map((newsItem) => {
