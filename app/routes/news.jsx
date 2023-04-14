@@ -37,7 +37,7 @@ export async function action({ request }) {
 
         const summaryResponse = await summarizeSearch(refinedResult, summaryArray);
         const summaryResult = summaryResponse.data.choices[0].message.content;
-        console.log(summaryResult);
+        console.log('jsx40 action', typeof summaryResult);
         const responseObject = {
 
 
@@ -54,8 +54,24 @@ export async function action({ request }) {
       }
     }
     if (_action === "theme") {
-      console.log('theme');
-      return 'theme';
+      const themeInput = body.get("themeInput");
+      if (!themeInput || themeInput.trim().length < 4) {
+        console.log('Search is invalid');
+        return null;
+      } else {
+        console.log(themeInput);
+
+        const gptColors = { "headerBG": "gray-100", "headertext": "gray-50", "sideBG": "gray-100", "sidetext": "gray-700", "mainBG": "gray-50", "maintext": "gray-900" };
+
+        const responseObject = {
+
+
+          gptColors: gptColors,
+          empty: '',
+        };
+
+        return json(responseObject);
+      }
     }
   }
 }
@@ -67,7 +83,9 @@ export default function NewsPage() {
   const actionData = useActionData() ?? [];
   const searchData = actionData.searchResults ?? [];
   const summaryResult = actionData.summaryResult ?? '';
-  const refinedData = actionData.refinedResult;
+  console.log('jsx92', summaryResult);
+  const refinedData = actionData.refinedResult ?? '';
+  const empty = actionData.empty ?? '';
   console.log('ActionData:', actionData);
 
 
@@ -76,13 +94,23 @@ export default function NewsPage() {
 
 
 
+  const defaultColors = {
+    headerBG: 'gray-800',
+    headertext: 'gray-50',
+    sideBG: 'gray-100',
+    sidetext: 'gray-700',
+    mainBG: 'gray-50',
+    maintext: 'gray-900',
+  };
 
 
+  const colors = actionData.gptColors ? { ...actionData.gptColors } : { ...defaultColors };
+  console.log('colors', colors);
 
 
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <header className="flex items-center justify-between bg-gray-800 p-4 text-white">
+      <header className={`flex items-center justify-between bg-${colors.headerBG} p-4 text-${colors.headertext}`}>
         <h1 className="text-3xl font-bold">
           <Link to=".">myNews</Link>
         </h1>
@@ -97,8 +125,8 @@ export default function NewsPage() {
         </Form>
       </header>
 
-      <main className="flex h-full bg-gray-50">
-        <div className="h-full w-80 border-r bg-gray-100 ">
+      <main className="flex h-full ">
+        <div className={`h-full w-80 border-r bg-${colors.sideBG} text-gray-700 `}>
           <Form method="post" className="flex items-center mt-4">
             <input type="text" name="search" placeholder="search" className=" border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
             <button type="submit" name="_action" value="searchBar" className="bg-gray-900 hover:bg-blue-700 text-white font-bold px-4 py-2 border border-gray-800 rounded inline">
@@ -153,7 +181,7 @@ export default function NewsPage() {
           <Form method="post" className="flex items-center mt-4">
             <input
               type="text"
-              placeholder="Describe your Theme!"
+              placeholder="Describe your Theme!" name="themeInput"
               className="border-2 border-gray-300 rounded-l-md py-2 px-4 w-full focus:outline-none focus:border-gray-500"
             />
             <button
@@ -167,7 +195,7 @@ export default function NewsPage() {
           </Form>
         </div>
 
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 bg-gray-50 text-gray-900" >
           <Outlet />
 
           {
