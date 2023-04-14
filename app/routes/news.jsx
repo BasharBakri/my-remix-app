@@ -2,6 +2,8 @@ import { bingNewsSearch } from "~/models/news/news.server";
 import { refineSearchTerm } from "~/models/ai/searchbot.server";
 import { summarizeSearch } from "~/models/ai/summarybot.server";
 import { json } from "@remix-run/server-runtime";
+import { themeify } from "~/models/ai/themechanger.server";
+import { useEffect } from "react";
 
 import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, NavLink } from "@remix-run/react";
 
@@ -61,16 +63,15 @@ export async function action({ request }) {
       } else {
         console.log(themeInput);
 
-        const gptColors = { "headerBG": "gray-100", "headertext": "gray-50", "sideBG": "gray-100", "sidetext": "gray-700", "mainBG": "gray-50", "maintext": "gray-900" };
-
+        const colorResults = await themeify(themeInput);
+        const gptColors = colorResults.data.choices[0].message.content;
         const responseObject = {
 
-
-          gptColors: gptColors,
           empty: '',
-        };
+          gptColors: gptColors,
 
-        return json(responseObject);
+        };
+        return json(gptColors);
       }
     }
   }
@@ -85,32 +86,42 @@ export default function NewsPage() {
   const summaryResult = actionData.summaryResult ?? '';
   console.log('jsx92', summaryResult);
   const refinedData = actionData.refinedResult ?? '';
-  const empty = actionData.empty ?? '';
-  console.log('ActionData:', actionData);
-
-
-
+  console.log('ActionData:', typeof actionData);
   const isSubmitting = navigation.state === 'submitting';
 
+  let finalgptColors;
 
+  if (actionData.includes('headerBG')) {
+    // If headerBG key exists, assign all keys to a new object
+    finalgptColors = JSON.parse(actionData);
+    console.log('97', finalgptColors);
+
+  } else {
+    console.log('didnt work');
+  }
+
+  console.log('outsideIF', finalgptColors);
 
   const defaultColors = {
-    headerBG: 'gray-800',
-    headertext: 'gray-50',
-    sideBG: 'gray-100',
-    sidetext: 'gray-700',
-    mainBG: 'gray-50',
-    maintext: 'gray-900',
+    headerBG: 'bg-gray-800',
+    headertext: 'text-gray-50',
+    sideBG: 'bg-gray-100',
+    sidetext: 'text-gray-700',
+    mainBG: 'bg-gray-50',
+    maintext: 'text-gray-900',
   };
 
 
-  const colors = actionData.gptColors ? { ...actionData.gptColors } : { ...defaultColors };
-  console.log('colors', colors);
+  const colors = finalgptColors ? finalgptColors : defaultColors;
+  console.log('colors final check', colors);
+  console.log('color 1 key after check', colors.headerBG);
+  console.log('gpt colors after checjk', finalgptColors);
+  console.log('defualt colors after checjk', defaultColors);
 
 
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <header className={`flex items-center justify-between bg-${colors.headerBG} p-4 text-${colors.headertext}`}>
+      <header className={`flex items-center justify-between ${colors.headerBG} p-4 ${colors.headertext}`}>
         <h1 className="text-3xl font-bold">
           <Link to=".">myNews</Link>
         </h1>
@@ -126,7 +137,8 @@ export default function NewsPage() {
       </header>
 
       <main className="flex h-full ">
-        <div className={`h-full w-80 border-r bg-${colors.sideBG} text-gray-700 `}>
+        <div className={`h-full w-80 border-r ${colors.sideBG} ${colors.sidetext} `}>
+          {console.log(colors.sideBG)}
           <Form method="post" className="flex items-center mt-4">
             <input type="text" name="search" placeholder="search" className=" border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
             <button type="submit" name="_action" value="searchBar" className="bg-gray-900 hover:bg-blue-700 text-white font-bold px-4 py-2 border border-gray-800 rounded inline">
@@ -195,7 +207,7 @@ export default function NewsPage() {
           </Form>
         </div>
 
-        <div className="flex-1 p-6 bg-gray-50 text-gray-900" >
+        <div className={`flex-1 p-6 ${colors.mainBG} ${colors.maintext}`} >
           <Outlet />
 
           {
@@ -205,7 +217,7 @@ export default function NewsPage() {
               ) : (
                 <Summary summary={summaryResult} />
               )
-            ) : <p>Waiting</p>
+            ) : <p>Summary bot</p>
           }
 
           {isSubmitting ?? isSubmitting ? <p>Loading...</p> : searchData.map((newsItem) => {

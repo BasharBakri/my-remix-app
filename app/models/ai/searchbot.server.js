@@ -25,7 +25,6 @@ export async function refineSearchTerm(search) {
     presence_penalty: 0,
   });
   // const choice = result.choices[0];
-  console.log(response.data.choices.messages[0].content);
   return response;
 }
 
