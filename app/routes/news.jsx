@@ -4,6 +4,11 @@ import { summarizeSearch } from "~/models/ai/summarybot.server";
 import { json } from "@remix-run/server-runtime";
 import { themeify } from "~/models/ai/themechanger.server";
 import { useEffect } from "react";
+import { createUserSession } from "~/session.server";
+import { requireUserId } from "~/session.server";
+import { useUser } from "~/utils";
+import { getNoteListItems } from "~/models/note.server";
+
 
 import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, NavLink } from "@remix-run/react";
 
@@ -77,6 +82,11 @@ export async function action({ request }) {
   }
 }
 
+export async function loader({ request }) {
+  const userId = await requireUserId(request);
+  const noteListItems = await getNoteListItems({ userId });
+  return json({ noteListItems });
+}
 
 
 export default function NewsPage() {
@@ -86,8 +96,14 @@ export default function NewsPage() {
   const summaryResult = actionData.summaryResult ?? '';
   console.log('jsx92', summaryResult);
   const refinedData = actionData.refinedResult ?? '';
-  console.log('ActionData:', typeof actionData);
+  console.log('fetcherdata:', typeof actionData);
   const isSubmitting = navigation.state === 'submitting';
+  const fetcher = useFetcher();
+  const loaderData = useLoaderData();
+  const user = useUser();
+
+  console.log('loader Data', loaderData);
+
 
   let finalgptColors;
 
@@ -113,11 +129,10 @@ export default function NewsPage() {
 
 
   const colors = finalgptColors ? finalgptColors : defaultColors;
+  console.log('gpt colors after checjk', finalgptColors);
+
   console.log('colors final check', colors);
   console.log('color 1 key after check', colors.headerBG);
-  console.log('gpt colors after checjk', finalgptColors);
-  console.log('defualt colors after checjk', defaultColors);
-
 
   return (
     <div className="flex h-full min-h-screen flex-col">
@@ -125,7 +140,7 @@ export default function NewsPage() {
         <h1 className="text-3xl font-bold">
           <Link to=".">myNews</Link>
         </h1>
-        <p>email</p>
+        <p>{user.email}</p>
         <Form action="/logout" method="post">
           <button
             type="submit"
@@ -137,7 +152,7 @@ export default function NewsPage() {
       </header>
 
       <main className="flex h-full ">
-        <div className={`h-full w-80 border-r ${colors.sideBG} ${colors.sidetext} `}>
+        <div className={`h-full w-80 border-r ${colors.sideBG} ${colors.sidetext}`}>
           {console.log(colors.sideBG)}
           <Form method="post" className="flex items-center mt-4">
             <input type="text" name="search" placeholder="search" className=" border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
@@ -177,7 +192,7 @@ export default function NewsPage() {
                 📫 Category
               </NavLink>
             </li>
-            <li>
+            <li className={colors.maintext}>
               <NavLink
                 className={({ isActive }) =>
                   `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
@@ -190,7 +205,7 @@ export default function NewsPage() {
 
 
           </ol>
-          <Form method="post" className="flex items-center mt-4">
+          <fetcher.Form method="post" className="flex items-center mt-4">
             <input
               type="text"
               placeholder="Describe your Theme!" name="themeInput"
@@ -204,7 +219,7 @@ export default function NewsPage() {
             >
               💻
             </button>
-          </Form>
+          </fetcher.Form>
         </div>
 
         <div className={`flex-1 p-6 ${colors.mainBG} ${colors.maintext}`} >
@@ -217,10 +232,10 @@ export default function NewsPage() {
               ) : (
                 <Summary summary={summaryResult} />
               )
-            ) : <p>Summary bot</p>
+            ) : <p className={`${colors.sideBG}`}>Summary bot</p>
           }
 
-          {isSubmitting ?? isSubmitting ? <p>Loading...</p> : searchData.map((newsItem) => {
+          {isSubmitting ?? isSubmitting ? <p >Loading...</p> : searchData.map((newsItem) => {
             const uniqueId = Math.random().toString(32).slice(2);
             return <NewsCard key={uniqueId} data={newsItem} />;
           })}
