@@ -87,13 +87,19 @@ export async function action({ request }) {
 }
 
 export async function loader({ request }) {
-  const userId = await requireUserId(request);
-  const currentTheme = await getTheme({ userId });
-  return null;
-  console.log('inside loader', currentTheme.themeInput);
-  const colorResults = await themeify(currentTheme.themeInput);
-  const gptColors = colorResults.data.choices[0].message.content;
-  return json({ gptColors });
+  try {
+    const userId = await requireUserId(request);
+    console.log('request', request);
+    return null;
+
+    const currentTheme = await getTheme({ userId });
+    console.log('inside loader', currentTheme.themeInput);
+    const colorResults = await themeify(currentTheme.themeInput);
+    const gptColors = colorResults.data.choices[0].message.content;
+    return json({ gptColors });
+  } catch (error) {
+    throw error;
+  }
 }
 
 
@@ -211,8 +217,9 @@ export default function NewsPage() {
 
 
           </ol>
-          <Form method="post" className="flex items-center mt-4">
+          <fetcher.Form method="post" className="flex items-center mt-4">
             <input
+
               type="text"
               placeholder="Describe your Theme!" name="themeInput"
               className="border-2 border-gray-300 rounded-l-md py-2 px-4 w-full focus:outline-none focus:border-gray-500"
@@ -225,7 +232,7 @@ export default function NewsPage() {
             >
               💻
             </button>
-          </Form>
+          </fetcher.Form>
         </div>
 
         <div className={`flex-1 p-6 ${colors.mainBG} ${colors.maintext}`} >
