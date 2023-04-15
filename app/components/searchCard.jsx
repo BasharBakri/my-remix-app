@@ -1,10 +1,4 @@
-
-
-// export async function loader(){
-
-// }
-
-export default function NewsCard({ data }) {
+export default function SearchCard({ data }) {
   const {
     datePublished,
     description,
@@ -12,6 +6,7 @@ export default function NewsCard({ data }) {
     url,
     // image, // uncomment this if you have image data
   } = data;
+
 
 
   return (

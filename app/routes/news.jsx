@@ -1,7 +1,7 @@
 import { bingNewsSearch } from "~/models/news/news.server";
 import { refineSearchTerm } from "~/models/ai/searchbot.server";
 import { summarizeSearch } from "~/models/ai/summarybot.server";
-import { json } from "@remix-run/server-runtime";
+import { json, redirect } from "@remix-run/server-runtime";
 import { themeify } from "~/models/ai/themechanger.server";
 import { useEffect, useRef } from "react";
 import { requireUserId } from "~/session.server";
@@ -13,9 +13,8 @@ import { getTheme } from "~/models/theme.server";
 
 import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, NavLink } from "@remix-run/react";
 
-import NewsCard from "./news.$newsId";
 
-import Summary from "./news.summary";
+
 
 
 export async function action({ request }) {
@@ -25,12 +24,14 @@ export async function action({ request }) {
 
 
     if (_action === "searchBar") {
+      const userId = await requireUserId(request);
 
       const searchTerm = body.get("search");
       if (!searchTerm || searchTerm.trim().length < 4) {
         console.log('Search is invalid');
         return null;
       }
+      return redirect(searchTerm);
       try {
         const result = await refineSearchTerm(searchTerm);
         const refinedResult = result.data.choices[0].message.content.slice(0, -1);
@@ -126,7 +127,6 @@ export default function NewsPage() {
     console.log('didnt work');
   }
 
-  console.log('outsideIF', finalgptColors);
 
   const defaultColors = {
     headerBG: 'bg-gray-800',
@@ -139,10 +139,7 @@ export default function NewsPage() {
 
 
   const colors = finalgptColors ? finalgptColors : defaultColors;
-  console.log('gpt colors after checjk', finalgptColors);
 
-  console.log('colors final check', colors);
-  console.log('color 1 key after check', colors.headerBG);
 
   return (
     <div className="flex h-full min-h-screen flex-col">
@@ -236,20 +233,6 @@ export default function NewsPage() {
         <div className={`flex-1 p-6 ${colors.mainBG} ${colors.maintext} overflow-y-auto	`} >
           <Outlet />
 
-          {
-            summaryResult.length > 1 ? (
-              isSubmitting ? (
-                <p>Loading...</p>
-              ) : (
-                <Summary summary={summaryResult} />
-              )
-            ) : <p className={`${colors.sideBG}`}>Summary bot</p>
-          }
-
-          {isSubmitting ?? isSubmitting ? <p >Loading...</p> : searchData.map((newsItem) => {
-            const uniqueId = Math.random().toString(32).slice(2);
-            return <NewsCard key={uniqueId} data={newsItem} />;
-          })}
         </div>
       </main>
     </div>

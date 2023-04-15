@@ -12,10 +12,10 @@ export function loader() {
 }
 
 
-export default function NewsTerm() {
+export default function TrendingNews() {
 
 
 
 
-  return <p>Searching for: testing</p>;
+  return <p>Searching for: Trending</p>;
 }
