@@ -3,10 +3,9 @@ import { refineSearchTerm } from "~/models/ai/searchbot.server";
 import { summarizeSearch } from "~/models/ai/summarybot.server";
 import { json } from "@remix-run/server-runtime";
 import { themeify } from "~/models/ai/themechanger.server";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { requireUserId } from "~/session.server";
 import { useUser } from "~/utils";
-import { getNoteListItems } from "~/models/note.server";
 
 import { createTheme } from "~/models/theme.server";
 import { getTheme } from "~/models/theme.server";
@@ -71,15 +70,11 @@ export async function action({ request }) {
       } else {
 
         const theme = await createTheme({ themeInput, userId });
-        return null;
-        const colorResults = await themeify(themeInput);
+        const currentTheme = await getTheme({ userId });
+        console.log('inside actionTheme', currentTheme.themeInput);
+        const colorResults = await themeify(currentTheme.themeInput);
         const gptColors = colorResults.data.choices[0].message.content;
-        const responseObject = {
-
-          empty: '',
-          gptColors: gptColors,
-
-        };
+        console.log('inside action gptColors', gptColors);
         return json(gptColors);
       }
     }
@@ -89,14 +84,9 @@ export async function action({ request }) {
 export async function loader({ request }) {
   try {
     const userId = await requireUserId(request);
-    console.log('request', request);
     return null;
 
-    const currentTheme = await getTheme({ userId });
-    console.log('inside loader', currentTheme.themeInput);
-    const colorResults = await themeify(currentTheme.themeInput);
-    const gptColors = colorResults.data.choices[0].message.content;
-    return json({ gptColors });
+
   } catch (error) {
     throw error;
   }
@@ -104,6 +94,9 @@ export async function loader({ request }) {
 
 
 export default function NewsPage() {
+
+
+
   const navigation = useNavigation();
   const actionData = useActionData() ?? [];
   const searchData = actionData.searchResults ?? [];
@@ -111,17 +104,22 @@ export default function NewsPage() {
   const refinedData = actionData.refinedResult ?? '';
   const isSubmitting = navigation.state === 'submitting';
   const fetcher = useFetcher();
+  console.log('fetcherData', fetcher.data);
   const loaderData = useLoaderData();
   const user = useUser();
 
-  console.log('loader Data', loaderData);
+  console.log('action Data', actionData);
+  const formRef = useRef();
+  useEffect(() => {
+    formRef.current.reset();
+  }, [fetcher.data]);
 
 
   let finalgptColors;
 
-  if (loaderData?.hasOwnProperty('gptColors') && typeof loaderData.gptColors === 'string') {
+  if (fetcher.data) {
     // If headerBG key exists, assign all keys to a new object
-    finalgptColors = JSON.parse(loaderData.gptColors);
+    finalgptColors = JSON.parse(fetcher.data);
     console.log('97', finalgptColors);
 
   } else {
@@ -217,7 +215,7 @@ export default function NewsPage() {
 
 
           </ol>
-          <fetcher.Form method="post" className="flex items-center mt-4">
+          <fetcher.Form ref={formRef} method="post" className="flex items-center mt-4">
             <input
 
               type="text"
@@ -235,7 +233,7 @@ export default function NewsPage() {
           </fetcher.Form>
         </div>
 
-        <div className={`flex-1 p-6 ${colors.mainBG} ${colors.maintext}`} >
+        <div className={`flex-1 p-6 ${colors.mainBG} ${colors.maintext} overflow-y-auto	`} >
           <Outlet />
 
           {
