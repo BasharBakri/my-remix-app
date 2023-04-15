@@ -4,10 +4,12 @@ import { summarizeSearch } from "~/models/ai/summarybot.server";
 import { json } from "@remix-run/server-runtime";
 import { themeify } from "~/models/ai/themechanger.server";
 import { useEffect } from "react";
-import { createUserSession } from "~/session.server";
 import { requireUserId } from "~/session.server";
 import { useUser } from "~/utils";
 import { getNoteListItems } from "~/models/note.server";
+
+import { createTheme } from "~/models/theme.server";
+import { getTheme } from "~/models/theme.server";
 
 
 import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, NavLink } from "@remix-run/react";
@@ -61,13 +63,15 @@ export async function action({ request }) {
       }
     }
     if (_action === "theme") {
+      const userId = await requireUserId(request);
       const themeInput = body.get("themeInput");
       if (!themeInput || themeInput.trim().length < 4) {
         console.log('Search is invalid');
         return null;
       } else {
-        console.log(themeInput);
 
+        const theme = await createTheme({ themeInput, userId });
+        return null;
         const colorResults = await themeify(themeInput);
         const gptColors = colorResults.data.choices[0].message.content;
         const responseObject = {
@@ -84,8 +88,12 @@ export async function action({ request }) {
 
 export async function loader({ request }) {
   const userId = await requireUserId(request);
-  const noteListItems = await getNoteListItems({ userId });
-  return json({ noteListItems });
+  const currentTheme = await getTheme({ userId });
+  return null;
+  console.log('inside loader', currentTheme.themeInput);
+  const colorResults = await themeify(currentTheme.themeInput);
+  const gptColors = colorResults.data.choices[0].message.content;
+  return json({ gptColors });
 }
 
 
@@ -94,9 +102,7 @@ export default function NewsPage() {
   const actionData = useActionData() ?? [];
   const searchData = actionData.searchResults ?? [];
   const summaryResult = actionData.summaryResult ?? '';
-  console.log('jsx92', summaryResult);
   const refinedData = actionData.refinedResult ?? '';
-  console.log('fetcherdata:', typeof actionData);
   const isSubmitting = navigation.state === 'submitting';
   const fetcher = useFetcher();
   const loaderData = useLoaderData();
@@ -107,9 +113,9 @@ export default function NewsPage() {
 
   let finalgptColors;
 
-  if (actionData.includes('headerBG')) {
+  if (loaderData?.hasOwnProperty('gptColors') && typeof loaderData.gptColors === 'string') {
     // If headerBG key exists, assign all keys to a new object
-    finalgptColors = JSON.parse(actionData);
+    finalgptColors = JSON.parse(loaderData.gptColors);
     console.log('97', finalgptColors);
 
   } else {
@@ -205,7 +211,7 @@ export default function NewsPage() {
 
 
           </ol>
-          <fetcher.Form method="post" className="flex items-center mt-4">
+          <Form method="post" className="flex items-center mt-4">
             <input
               type="text"
               placeholder="Describe your Theme!" name="themeInput"
@@ -219,7 +225,7 @@ export default function NewsPage() {
             >
               💻
             </button>
-          </fetcher.Form>
+          </Form>
         </div>
 
         <div className={`flex-1 p-6 ${colors.mainBG} ${colors.maintext}`} >
