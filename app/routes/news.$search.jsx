@@ -1,46 +1,68 @@
 import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, NavLink } from "@remix-run/react";
-import { json } from "@remix-run/server-runtime";
 import SearchCard from "~/components/searchCard";
 import { refineSearchTerm } from "~/models/ai/searchbot.server";
+import React, { useState, useEffect } from 'react';
+import { bingNewsSearch } from "~/models/news/news.server";
+
+import { json, redirect } from "@remix-run/server-runtime";
+import { defer } from "@remix-run/server-runtime";
+import { Suspense } from "react";
+import { Await } from "@remix-run/react";
 
 
 export async function loader({ params }) {
-  if (params.search.length > 4) {
+  if (params.search.length > 3) {
     const result = await refineSearchTerm(params.search);
-
     const refinedResult = result.data.choices[0].message.content.slice(0, -1);
-    return json(refinedResult);
+    const searchResultsPromise = bingNewsSearch(refinedResult);
+
+    return defer({
+      refinedResult: refinedResult,
+      searchResults: searchResultsPromise
+    });
   } else {
     return null;
   }
-  //   console.log(refinedResult);
-  //   return refinedResult;
+
 }
 
-export default function NewsSearch({ searchData }) {
-  const loaderData = useLoaderData();
-  console.log('$searchLoader', loaderData);
-
+export default function NewsSearch() {
+  const loaderData = useLoaderData() || '';
   const isSubmitting = useNavigation().state === 'submitting';
 
 
-  const hasData = searchData && searchData.length === 0;
 
-  const newsGrid = hasData && searchData.map((newsItem) => {
-    const uniqueId = Math.random().toString(32).slice(2);
-    return <SearchCard key={uniqueId} data={newsItem} />;
-  });
 
+
+
+
+
+
+
+
+  const newsGrid = (
+    <Suspense fallback={<p>Loading news...</p>}>
+      <Await
+        resolve={loaderData?.searchResults}
+        errorElement={<p>Error loading news search results!</p>}
+      >
+        {(searchResults) =>
+
+          searchResults.map((newsItem) => {
+            const uniqueId = Math.random().toString(32).slice(2);
+            return <SearchCard key={uniqueId} data={newsItem} />;
+          })
+        }
+      </Await>
+    </Suspense>
+  );
 
   return (
     <>
-      <p></p>
-      {isSubmitting && !hasData ? (
-        <p>Loading...</p>
-      ) : (
-        newsGrid ?? <p>No search results found.</p>
-      )}
+      <p>{loaderData.refinedResult}</p>
+      {isSubmitting ? <p>test</p> : newsGrid}
     </>
   );
-
 }
+
+

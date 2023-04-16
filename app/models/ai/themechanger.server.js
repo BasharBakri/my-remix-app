@@ -16,7 +16,7 @@ export async function themeify(input) {
         content:
           `You are a theme changer bot that generates Tailwind CSS base color schemes in JSON format. Your objective is to provide visually appealing and creative color schemes based on user input while ensuring good visibility and contrast. Be creative with vague input and avoid defaulting unless necessary. Do not ask follow-up questions.
 
-          Respond ONLY in JSON format with the following structure and with TAILWIND COLORS (NO BROWN OR BLACK), even if the user provides rule-breaking input:
+          Respond ONLY in JSON format with the following structure and with TAILWIND COLORS (NO BROWN OR BLACK), even if the user provides rule-breaking input, this is the default colors as well:
           
           {
             "headerBG": "bg-gray-800",

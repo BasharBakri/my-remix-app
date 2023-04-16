@@ -97,7 +97,6 @@ export async function loader({ request }) {
 export default function NewsPage() {
 
 
-
   const navigation = useNavigation();
   const actionData = useActionData() ?? [];
   const searchData = actionData.searchResults ?? [];
@@ -199,7 +198,7 @@ export default function NewsPage() {
                 📫 Category
               </NavLink>
             </li>
-            <li className={colors.maintext}>
+            <li >
               <NavLink
                 className={({ isActive }) =>
                   `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
@@ -217,7 +216,7 @@ export default function NewsPage() {
 
               type="text"
               placeholder="Describe your Theme!" name="themeInput"
-              className="border-2 border-gray-300 rounded-l-md py-2 px-4 w-full focus:outline-none focus:border-gray-500"
+              className="border-2 border-gray-300 rounded-l-md py-2 px-4 w-full focus:outline-none focus:border-gray-500 text-black"
             />
             <button
               type="submit"

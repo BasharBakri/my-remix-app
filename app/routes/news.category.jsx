@@ -1,4 +1,4 @@
-
+import Loading from "~/components/Loader";
 
 
 
@@ -17,5 +17,8 @@ export default function CategoryNews() {
 
 
 
-  return <p>Searching for: Category</p>;
+  return (<>
+
+    <p>Searching for: Category</p>
+  </>);
 }
