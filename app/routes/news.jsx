@@ -35,28 +35,6 @@ export async function action({ request }) {
         const refinedResult = result.data.choices[0].message.content.slice(0, -1);
         return redirect(refinedResult);
 
-
-        const summaryArray = searchResults.map((oneResult) => {
-          return {
-            name: oneResult.name,
-            description: oneResult.description
-          };
-        });
-
-        const summaryResponse = await summarizeSearch(refinedResult, summaryArray);
-        const summaryResult = summaryResponse.data.choices[0].message.content;
-        console.log('jsx40 action', typeof summaryResult);
-        const responseObject = {
-
-
-          searchResults: searchResults,
-          refinedResult: refinedResult,
-          summaryResult: summaryResult
-        };
-
-        // Return the responseObject
-        return json(responseObject);
-
       } catch (error) {
         throw error;
       }
@@ -229,7 +207,7 @@ export default function NewsPage() {
         </div>
 
         <div className={`flex-1 p-6 ${colors.mainBG} ${colors.maintext} overflow-y-auto	`} >
-          <Outlet />
+          <Outlet context={[colors.sideBG, colors.sidetext]} />
 
         </div>
       </main>

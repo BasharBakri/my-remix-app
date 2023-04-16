@@ -25,8 +25,10 @@ export async function summarizeSearch(search, results) {
     frequency_penalty: 0,
     presence_penalty: 0,
   });
-  // const choice = result.choices[0];
-  return response;
+  const content = response.data.choices[0].message.content;
+
+  // Return only the content
+  return content;
 };
 
 

@@ -4,10 +4,10 @@ export async function bingNewsSearch(search) {
   const subscriptionKey = process.env.BING_API_KEY;
   const host = "api.bing.microsoft.com";
   const path = "/v7.0/news/search";
-  const count = 8;
+  const count = 30;
   const freshness = "Month";
   const sortBy = "relevance";
-  const offset = 0;
+  const offset = 8;
   const mkt = "en-WW";
 
   const url = `https://${host}${path}?q=${encodeURIComponent(search)}&count=${count}&freshness=${freshness}&sortBy=${sortBy}&offset=${offset}&mkt=${mkt}`;

@@ -3,7 +3,21 @@ import type { Config } from "tailwindcss";
 export default {
   content: ["./app/**/*.{js,jsx,ts,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      keyframes: {
+        blink: {
+          '50%': {
+            borderColor: 'transparent',
+          },
+          '100%': {
+            borderColor: 'white',
+          },
+        },
+      },
+      animation: {
+        blink: 'blink .7s infinite',
+      },
+    },
   },
   plugins: [],
   safelist: [
