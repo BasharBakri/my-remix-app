@@ -1,6 +1,4 @@
-import { bingNewsSearch } from "~/models/news/news.server";
 import { refineSearchTerm } from "~/models/ai/searchbot.server";
-import { summarizeSearch } from "~/models/ai/summarybot.server";
 import { json, redirect } from "@remix-run/server-runtime";
 import { themeify } from "~/models/ai/themechanger.server";
 import { useEffect, useRef } from "react";
@@ -9,18 +7,13 @@ import { useUser } from "~/utils";
 import { createTheme } from "~/models/theme.server";
 import { getTheme } from "~/models/theme.server";
 
-
 import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, NavLink } from "@remix-run/react";
-
-
-
 
 
 export async function action({ request }) {
   if (request.method.toLowerCase() === "post") {
     const body = await request.formData();
     const _action = body.get("_action");
-
 
     if (_action === "searchBar") {
       const userId = await requireUserId(request);
@@ -70,14 +63,11 @@ export async function loader({ request }) {
   }
 }
 
-
 export default function NewsPage() {
 
 
   const navigation = useNavigation();
   const actionData = useActionData() ?? [];
-  const searchData = actionData.searchResults ?? [];
-  const summaryResult = actionData.summaryResult ?? '';
   const refinedData = actionData.refinedResult ?? '';
   const isSubmitting = navigation.state === 'submitting';
   const fetcher = useFetcher();
@@ -95,7 +85,6 @@ export default function NewsPage() {
   let finalgptColors;
 
   if (fetcher.data) {
-    // If headerBG key exists, assign all keys to a new object
     finalgptColors = JSON.parse(fetcher.data);
     console.log('97', finalgptColors);
 
@@ -127,7 +116,7 @@ export default function NewsPage() {
         <Form action="/logout" method="post">
           <button
             type="submit"
-            className="rounded bg-gray-600 px-4 py-2 text-blue-100 hover:bg-blue-500 active:bg-blue-600"
+            className={`rounded bg-gray-600 px-4 py-2 ${colors.headertext} hover:bg-blue-500 active:bg-blue-600`}
           >
             Logout
           </button>
@@ -137,9 +126,9 @@ export default function NewsPage() {
       <main className="flex h-full ">
         <div className={`h-full w-80 border-r ${colors.sideBG} ${colors.sidetext}`}>
           {console.log(colors.sideBG)}
-          <Form method="post" className="flex items-center mt-4">
-            <input type="text" name="search" placeholder="search" className=" border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
-            <button type="submit" name="_action" value="searchBar" className="bg-gray-900 hover:bg-blue-700 text-white font-bold px-4 py-2 border border-gray-800 rounded inline">
+          <Form method="post" className="flex items-center mt-3">
+            <input type="text" name="search" placeholder="search" className=" border-2 border-gray-300 rounded-l-md py-2 px-4 w-full focus:outline-none focus:border-gray-500 text-black" />
+            <button type="submit" name="_action" value="searchBar" className="bg-gray-500 text-white font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600">
               {isSubmitting ? "🔎..." : "🔍"}</button>
           </Form>
           <hr />

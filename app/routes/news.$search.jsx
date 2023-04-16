@@ -1,4 +1,4 @@
-import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, useOutletContext } from "@remix-run/react";
+import { useLoaderData, useNavigation, useOutletContext } from "@remix-run/react";
 import SearchCard from "~/components/searchCard";
 import { bingNewsSearch } from "~/models/news/news.server";
 import { summarizeSearch } from "~/models/ai/summarybot.server";
@@ -83,7 +83,10 @@ export default function NewsSearch() {
               </div>
             );
           } else {
-            return <pre className={`${textColor} ${bgColor}`}>Loading summary...</pre>;
+            return (
+              <div className={`${bgColor} max-w-full  p-4`}>
+                <pre className={textColor}>Loading summary...</pre>
+              </div>);
           }
         }}
       </Await>
