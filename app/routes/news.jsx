@@ -6,7 +6,6 @@ import { themeify } from "~/models/ai/themechanger.server";
 import { useEffect, useRef } from "react";
 import { requireUserId } from "~/session.server";
 import { useUser } from "~/utils";
-
 import { createTheme } from "~/models/theme.server";
 import { getTheme } from "~/models/theme.server";
 
@@ -31,12 +30,12 @@ export async function action({ request }) {
         console.log('Search is invalid');
         return null;
       }
-      return redirect(searchTerm);
       try {
         const result = await refineSearchTerm(searchTerm);
         const refinedResult = result.data.choices[0].message.content.slice(0, -1);
-        const searchResults = await bingNewsSearch(refinedResult);
-        console.log('searchresults news.jsx23:', refinedResult);
+        return redirect(refinedResult);
+
+
         const summaryArray = searchResults.map((oneResult) => {
           return {
             name: oneResult.name,
