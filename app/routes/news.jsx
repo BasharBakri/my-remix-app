@@ -10,9 +10,11 @@ import { requireUserId } from "~/session.server";
 import { useUser } from "~/utils";
 
 
-
+import { createSearch } from "~/models/search.server";
+import { getSearch } from "~/models/search.server";
 import { createTheme } from "~/models/theme.server";
 import { getTheme } from "~/models/theme.server";
+
 
 import { useLoaderData, Link, Form, Outlet, useActionData, useFetcher, useNavigation, NavLink } from "@remix-run/react";
 
@@ -26,13 +28,18 @@ export async function action({ request }) {
       const userId = await requireUserId(request);
 
       const searchTerm = body.get("search");
-      if (!searchTerm || searchTerm.trim().length < 4) {
+      if (!searchTerm || searchTerm.trim().length < 3) {
         console.log('Search is invalid');
         return null;
       }
       try {
         const result = await refineSearchTerm(searchTerm);
         const refinedResult = result.data.choices[0].message.content.slice(0, -1);
+        const search = await createSearch({
+          userSearchString: searchTerm,
+          botSearchString: refinedResult,
+          userId: userId
+        });
         return redirect(refinedResult);
 
       } catch (error) {
@@ -42,8 +49,8 @@ export async function action({ request }) {
     if (_action === "theme") {
       const userId = await requireUserId(request);
       const themeInput = body.get("themeInput");
-      if (!themeInput || themeInput.trim().length < 4) {
-        console.log('Search is invalid');
+      if (!themeInput || themeInput.trim().length < 3) {
+        console.log('themeInput is invalid');
         return null;
       } else {
 
@@ -60,13 +67,31 @@ export async function action({ request }) {
 }
 
 export async function loader({ request }) {
+  const userId = await requireUserId(request);
+  const now = new Date();
+
   try {
-    const userId = await requireUserId(request);
-    return null;
+    const latestSearch = await getSearch({ userId });
+    console.log('latest search news loader', latestSearch);
 
 
+    const timeDifference = now.getTime() - new Date(latestSearch.createdAt).getTime();
+    console.log('timeDifference', timeDifference);
+    console.log('should return latestSearch?', timeDifference < 60 * 1000);
+
+    if (
+      latestSearch &&
+      now.getTime() - new Date(latestSearch.createdAt).getTime() > 60 * 1000
+    ) {
+      // The latest search hasn't happened in the last 60 secs. Must use cookies this is really bad and stupid
+      return { latestSearch: null };
+    } else {
+      // The user searched last 60 secs
+      return { latestSearch };
+    }
   } catch (error) {
-    throw error;
+    console.error('Error fetching latest search:', error);
+    return { latestSearch: null };
   }
 }
 
@@ -82,7 +107,9 @@ export default function NewsPage() {
   const loaderData = useLoaderData();
   const user = useUser();
 
-  console.log('action Data', actionData);
+  console.log('LoaderData newsPage', loaderData);
+  console.log(loaderData?.latestSearch?.botSearchString);
+
   const themeFormRef = useRef();
   useEffect(() => {
     themeFormRef.current.reset();
@@ -119,7 +146,12 @@ export default function NewsPage() {
         <h1 className="text-3xl font-bold">
           <Link to=".">myNews</Link>
         </h1>
-        <p>{user.email}</p>
+        <Form method="post" className="flex items-center mt-3">
+          <input type="text" name="search" placeholder="search" className="rounded-l-md py-2 px-4 w-96 focus:outline-none  text-black" />
+          <button disabled={isSubmitting} type="submit" name="_action" value="searchBar" className={`${colors.sideBG}  font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600`}>
+            {isSubmitting ? <Loading></Loading> : "🔍"}</button>
+        </Form>
+
         <Form action="/logout" method="post">
           <button
             type="submit"
@@ -133,11 +165,7 @@ export default function NewsPage() {
       <main className="flex h-full ">
         <div className={`h-full w-80 border-r ${colors.sideBG} ${colors.sidetext}`}>
           {console.log(colors.sideBG)}
-          <Form method="post" className="flex items-center mt-3">
-            <input type="text" name="search" placeholder="search" className=" border-2 border-gray-300 rounded-l-md py-2 px-4 w-full focus:outline-none focus:border-gray-500 text-black" />
-            <button disabled={isSubmitting} type="submit" name="_action" value="searchBar" className={`${colors.headerBG} text-white font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600`}>
-              {isSubmitting ? <Loading></Loading> : "🔍"}</button>
-          </Form>
+          <p>{user.email}</p>
           <hr />
           <ol>
 
@@ -148,7 +176,7 @@ export default function NewsPage() {
                 }
                 to='.'
               >
-                🔍 {refinedData ? `Results for ${refinedData} ` : ''}
+                🔍 {loaderData?.latestSearch ? `Results for ${loaderData?.latestSearch?.botSearchString} ` : ''}
               </NavLink>
             </li>
             <li>
