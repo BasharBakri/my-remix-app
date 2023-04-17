@@ -77,16 +77,16 @@ export async function loader({ request }) {
 
     const timeDifference = now.getTime() - new Date(latestSearch.createdAt).getTime();
     console.log('timeDifference', timeDifference);
-    console.log('should return latestSearch?', timeDifference < 60 * 1000);
+    console.log('should return latestSearch?', timeDifference < 60 * 100);
 
     if (
       latestSearch &&
-      now.getTime() - new Date(latestSearch.createdAt).getTime() > 60 * 1000
+      now.getTime() - new Date(latestSearch.createdAt).getTime() > 60 * 100
     ) {
-      // The latest search hasn't happened in the last 60 secs. Must use cookies this is really bad and stupid
+      // The latest search hasn't happened in the last 6 secs. Must use cookies this is really bad and stupid
       return { latestSearch: null };
     } else {
-      // The user searched last 60 secs
+      // The user searched last 6 secs
       return { latestSearch };
     }
   } catch (error) {
@@ -99,8 +99,6 @@ export default function NewsPage() {
 
 
   const navigation = useNavigation();
-  const actionData = useActionData() ?? [];
-  const refinedData = actionData.refinedResult ?? '';
   const isSubmitting = navigation.state === 'submitting';
   const fetcher = useFetcher();
   console.log('fetcherData', fetcher.data);
@@ -111,9 +109,11 @@ export default function NewsPage() {
   console.log(loaderData?.latestSearch?.botSearchString);
 
   const themeFormRef = useRef();
+  const searchFormRef = useRef();
   useEffect(() => {
     themeFormRef.current.reset();
-  }, [fetcher.data]);
+    searchFormRef.current.reset();
+  }, [fetcher.data, loaderData.latestSearch]);
 
 
   let finalgptColors;
@@ -136,6 +136,16 @@ export default function NewsPage() {
     maintext: 'text-gray-900',
   };
 
+  const defaultPage = {
+    websiteTitle: 'My News',
+    category: 'world',
+    categoryEmoji: '📫',
+    mkt: 'en-US',
+    trendingEmoji: '💹',
+    forYou: '🎯 For You',
+    forYouSearch: ''
+  };
+
 
   const colors = finalgptColors ? finalgptColors : defaultColors;
 
@@ -144,9 +154,9 @@ export default function NewsPage() {
     <div className="flex h-full min-h-screen flex-col">
       <header className={`flex items-center justify-between ${colors.headerBG} p-4 ${colors.headertext}`}>
         <h1 className="text-3xl font-bold">
-          <Link to=".">myNews</Link>
+          <Link to=".">{defaultPage.websiteTitle}</Link>
         </h1>
-        <Form method="post" className="flex items-center mt-3">
+        <Form ref={searchFormRef} method="post" className="flex items-center ">
           <input type="text" name="search" placeholder="search" className="rounded-l-md py-2 px-4 w-96 focus:outline-none  text-black" />
           <button disabled={isSubmitting} type="submit" name="_action" value="searchBar" className={`${colors.sideBG}  font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600`}>
             {isSubmitting ? <Loading></Loading> : "🔍"}</button>
@@ -165,18 +175,16 @@ export default function NewsPage() {
       <main className="flex h-full ">
         <div className={`h-full w-80 border-r ${colors.sideBG} ${colors.sidetext}`}>
           {console.log(colors.sideBG)}
-          <p>{user.email}</p>
+          <p className="p-4">Welcome {user.email}</p>
           <hr />
           <ol>
 
             <li>
               <NavLink
-                className={({ isActive }) =>
-                  `block border-b p-4 text-xs  }`
-                }
+                className={`block border p-4 text-xs ${isSubmitting ? 'animate-blink' : ''}`}
                 to='.'
               >
-                🔍 {loaderData?.latestSearch ? `Results for ${loaderData?.latestSearch?.botSearchString} ` : ''}
+                {loaderData?.latestSearch ? <p>`Results for {loaderData?.latestSearch?.botSearchString}</p> : <p>&nbsp;</p>}
               </NavLink>
             </li>
             <li>
@@ -184,9 +192,9 @@ export default function NewsPage() {
                 className={({ isActive }) =>
                   `block border-b p-4 text-xl ${isActive ? colors.mainBG : ""}`
                 }
-                to='trending'
+                to={`trending/${defaultPage.mkt}`}
               >
-                💹 Trending
+                {defaultPage.trendingEmoji} Trending
               </NavLink>
             </li>
             <li>
@@ -194,30 +202,29 @@ export default function NewsPage() {
                 className={({ isActive }) =>
                   `block border-b p-4 text-xl ${isActive ? colors.mainBG : ""}`
                 }
-                to='category'
+                to={`category/${defaultPage.category}`}
               >
-                📫 Category
+                {`${defaultPage.categoryEmoji} ${defaultPage.category.charAt(0).toUpperCase() + defaultPage.category.slice(1)}`}
               </NavLink>
             </li>
             <li >
               <NavLink
-                className={({ isActive }) =>
-                  `block border-b p-4 text-xl ${isActive ? colors.mainBG : ""}`
-                }
-                to='country'
+                className="block border-b p-4 text-xl
+"
+                to={defaultPage.forYouSearch}
               >
-                🌍 Location
+                {defaultPage.forYou}
               </NavLink>
             </li>
 
 
           </ol>
-          <fetcher.Form ref={themeFormRef} method="post" className="flex items-center mt-4">
+          <fetcher.Form ref={themeFormRef} method="post" className="flex items-center p-4">
             <input
 
               type="text"
               placeholder="Describe your Theme!" name="themeInput"
-              className="border-2 border-gray-300 rounded-l-md py-2 px-4 w-full focus:outline-none focus:border-gray-500 text-black"
+              className="border-2 border-gray-300 rounded-l-md py-2 px-4 w-60 focus:outline-none focus:border-gray-500 text-black"
             />
             <button
               type="submit"
@@ -228,6 +235,7 @@ export default function NewsPage() {
               💻
             </button>
           </fetcher.Form>
+          <hr />
         </div>
 
         <div className={`flex-1 p-6 ${colors.mainBG} ${colors.maintext} overflow-y-auto	`} >

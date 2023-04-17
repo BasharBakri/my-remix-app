@@ -8,6 +8,7 @@ import { Await } from "@remix-run/react";
 
 
 export async function loader({ params }) {
+
   if (params.search) {
 
     try {
@@ -23,7 +24,6 @@ export async function loader({ params }) {
           description: oneResult.description
         };
       });
-      console.log('$searchloader26 summary array', summaryArray);
       const summaryResponsePromise = summarizeSearch(params.search, summaryArray);
       return defer({
         searchResults: searchResultsPromise,
@@ -66,7 +66,10 @@ export default function NewsSearch() {
   );
 
   const summary = (
-    <Suspense fallback={<p>Loading summary...</p>}>
+    <Suspense fallback={(
+      <div className={`${bgColor} max-w-full  p-4`}>
+        <pre className={textColor}>Loading summary...</pre>
+      </div>)}>
       <Await
         resolve={loaderData?.summaryResponse}
         errorElement={<p>Error loading summary!</p>}
@@ -85,7 +88,7 @@ export default function NewsSearch() {
           } else {
             return (
               <div className={`${bgColor} max-w-full  p-4`}>
-                <pre className={textColor}>Loading summary...</pre>
+                <pre className={textColor}>Waiting for a new search</pre>
               </div>);
           }
         }}
@@ -96,7 +99,7 @@ export default function NewsSearch() {
   return (
     <>
       {summary}
-      {isSubmitting ? <pre className={`${textColor} ${bgColor}`}>test</pre> : newsGrid}
+      {isSubmitting ? <pre className={`${textColor} ${bgColor} mt-4`}>Loading results</pre> : newsGrid}
     </>
   );
 }

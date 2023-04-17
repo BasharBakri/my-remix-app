@@ -7,7 +7,7 @@ export async function bingNewsSearch(search) {
   const count = 30;
   const freshness = "Month";
   const sortBy = "relevance";
-  const offset = 8;
+  const offset = 0;
   const mkt = "en-WW";
 
   const url = `https://${host}${path}?q=${encodeURIComponent(search)}&count=${count}&freshness=${freshness}&sortBy=${sortBy}&offset=${offset}&mkt=${mkt}`;
