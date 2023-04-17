@@ -38,6 +38,35 @@ export function getSearch({ userId }) {
 }
 
 
+export function getAllSearches({ userId }) {
+  try {
+    return prisma.search.findMany({
+      select: { id: true, userSearchString: true, botSearchString: true, createdAt: true },
+      where: { userId },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching all searches:', error);
+    throw error;
+  }
+};
+
+
+export async function deleteAllSearches({ userId }) {
+  try {
+    const deletedSearches = await prisma.search.deleteMany({
+      where: { userId },
+    });
+
+    return deletedSearches;
+  } catch (error) {
+    console.error('Error deleting all searches:', error);
+    throw error;
+  }
+}
+
 
 
 

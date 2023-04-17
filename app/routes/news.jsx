@@ -1,6 +1,7 @@
 import { refineSearchTerm } from "~/models/ai/searchbot.server";
 import { json, redirect } from "@remix-run/server-runtime";
 import { themeify } from "~/models/ai/themechanger.server";
+import { personalize } from "~/models/ai/personalizer.server";
 
 
 import { useEffect, useRef } from "react";
@@ -12,6 +13,8 @@ import { useUser } from "~/utils";
 
 import { createSearch } from "~/models/search.server";
 import { getSearch } from "~/models/search.server";
+import { getAllSearches } from "~/models/search.server";
+import { deleteAllSearches } from "~/models/search.server";
 import { createTheme } from "~/models/theme.server";
 import { getTheme } from "~/models/theme.server";
 
@@ -71,27 +74,41 @@ export async function loader({ request }) {
   const now = new Date();
 
   try {
-    const latestSearch = await getSearch({ userId });
-    console.log('latest search news loader', latestSearch);
+    // await deleteAllSearches({ userId });  In case of emergency uncomment
+    const allSearches = await getAllSearches({ userId });
+
+    //delete at 7 for checking
+    if (allSearches.length >= 7) {
+      await deleteAllSearches({ userId });
+    }
+    const latestSearch = allSearches[0];
 
 
-    const timeDifference = now.getTime() - new Date(latestSearch.createdAt).getTime();
+    // test out personalize
+    if (allSearches.length === 3 || allSearches.length === 6) {
+      const personalizedPage = await personalize(allSearches[0].userSearchString, allSearches[1].userSearchString, allSearches[2].userSearchString);
+      return json({ allSearches, latestSearch, personalizedPage });
+    }
+
+
+
+    const timeDifference = now.getTime() - new Date(latestSearch?.createdAt).getTime();
     console.log('timeDifference', timeDifference);
     console.log('should return latestSearch?', timeDifference < 60 * 100);
 
     if (
       latestSearch &&
-      now.getTime() - new Date(latestSearch.createdAt).getTime() > 60 * 100
+      now.getTime() - new Date(latestSearch?.createdAt).getTime() > 60 * 100
     ) {
       // The latest search hasn't happened in the last 6 secs. Must use cookies this is really bad and stupid
-      return { latestSearch: null };
+      return json({ allSearches, latestSearch: null });
     } else {
       // The user searched last 6 secs
-      return { latestSearch };
+      return json({ allSearches, latestSearch });
     }
   } catch (error) {
     console.error('Error fetching latest search:', error);
-    return { latestSearch: null };
+    return json({ latestSearch: null });
   }
 }
 
@@ -104,9 +121,8 @@ export default function NewsPage() {
   console.log('fetcherData', fetcher.data);
   const loaderData = useLoaderData();
   const user = useUser();
-
+  const jsonPage = loaderData?.personalizedPage || null;
   console.log('LoaderData newsPage', loaderData);
-  console.log(loaderData?.latestSearch?.botSearchString);
 
   const themeFormRef = useRef();
   const searchFormRef = useRef();
@@ -126,6 +142,14 @@ export default function NewsPage() {
     console.log('didnt work');
   }
 
+  let personalPage;
+
+  if (jsonPage) {
+    personalPage = JSON.parse(jsonPage);
+    console.log(personalPage);
+  } else {
+    console.log('Personalized didnt  work');
+  }
 
   const defaultColors = {
     headerBG: 'bg-gray-800',
@@ -139,7 +163,7 @@ export default function NewsPage() {
   const defaultPage = {
     websiteTitle: 'My News',
     category: 'world',
-    categoryEmoji: '📫',
+    categoryEmoji: '🌍',
     mkt: 'en-US',
     trendingEmoji: '💹',
     forYou: '🎯 For You',
@@ -148,13 +172,14 @@ export default function NewsPage() {
 
 
   const colors = finalgptColors ? finalgptColors : defaultColors;
+  const finalPage = personalPage ? personalPage : defaultPage;
 
 
   return (
     <div className="flex h-full min-h-screen flex-col">
       <header className={`flex items-center justify-between ${colors.headerBG} p-4 ${colors.headertext}`}>
         <h1 className="text-3xl font-bold">
-          <Link to=".">{defaultPage.websiteTitle}</Link>
+          <Link to=".">{finalPage.websiteTitle}</Link>
         </h1>
         <Form ref={searchFormRef} method="post" className="flex items-center ">
           <input type="text" name="search" placeholder="search" className="rounded-l-md py-2 px-4 w-96 focus:outline-none  text-black" />
@@ -174,9 +199,6 @@ export default function NewsPage() {
 
       <main className="flex h-full ">
         <div className={`h-full w-80 border-r ${colors.sideBG} ${colors.sidetext}`}>
-          {console.log(colors.sideBG)}
-          <p className="p-4">Welcome {user.email}</p>
-          <hr />
           <ol>
 
             <li>
@@ -184,7 +206,7 @@ export default function NewsPage() {
                 className={`block border p-4 text-xs ${isSubmitting ? 'animate-blink' : ''}`}
                 to='.'
               >
-                {loaderData?.latestSearch ? <p>`Results for {loaderData?.latestSearch?.botSearchString}</p> : <p>&nbsp;</p>}
+                {loaderData?.latestSearch ? <p>🔍Results for {loaderData?.latestSearch?.botSearchString}</p> : <p>🔍&nbsp;</p>}
               </NavLink>
             </li>
             <li>
@@ -192,9 +214,9 @@ export default function NewsPage() {
                 className={({ isActive }) =>
                   `block border-b p-4 text-xl ${isActive ? colors.mainBG : ""}`
                 }
-                to={`trending/${defaultPage.mkt}`}
+                to={`trending/${finalPage.mkt}`}
               >
-                {defaultPage.trendingEmoji} Trending
+                {finalPage.trendingEmoji} Trending
               </NavLink>
             </li>
             <li>
@@ -202,40 +224,54 @@ export default function NewsPage() {
                 className={({ isActive }) =>
                   `block border-b p-4 text-xl ${isActive ? colors.mainBG : ""}`
                 }
-                to={`category/${defaultPage.category}`}
+                to={`category/${finalPage.category}`}
               >
-                {`${defaultPage.categoryEmoji} ${defaultPage.category.charAt(0).toUpperCase() + defaultPage.category.slice(1)}`}
+                {`${finalPage.categoryEmoji} ${finalPage.category.charAt(0).toUpperCase() + finalPage.category.slice(1)}`}
               </NavLink>
             </li>
             <li >
               <NavLink
-                className="block border-b p-4 text-xl
-"
-                to={defaultPage.forYouSearch}
+                className="block border-b p-4 text-xl"
+                to={finalPage.forYouSearch}
               >
-                {defaultPage.forYou}
+                {finalPage.forYou}
               </NavLink>
             </li>
+            <fetcher.Form ref={themeFormRef} method="post" className="flex items-center p-4">
+              <input
+
+                type="text"
+                placeholder="Describe your Theme!" name="themeInput"
+                className="border-2 border-gray-300 rounded-l-md py-2 px-4 w-60 focus:outline-none focus:border-gray-500 text-black"
+              />
+              <button
+                type="submit"
+                name="_action"
+                value="theme"
+                className={`${colors.headerBG} text-white font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600`}
+              >
+                💻
+              </button>
+            </fetcher.Form>
+            <hr />
+            <p className="p-4">Search History for: {user.email}</p>
+            <hr />
+            {loaderData.allSearches && loaderData.allSearches.map((search) => (
+              <li key={search.id}>
+                <NavLink
+                  className={({ isActive }) =>
+                    `block border-b p-4 text-xl ${isActive ? colors.mainBG : ""}`
+                  }
+                  to={search.botSearchString}
+                >
+                  {search.userSearchString}
+                </NavLink>
+              </li>
+            ))}
 
 
           </ol>
-          <fetcher.Form ref={themeFormRef} method="post" className="flex items-center p-4">
-            <input
 
-              type="text"
-              placeholder="Describe your Theme!" name="themeInput"
-              className="border-2 border-gray-300 rounded-l-md py-2 px-4 w-60 focus:outline-none focus:border-gray-500 text-black"
-            />
-            <button
-              type="submit"
-              name="_action"
-              value="theme"
-              className={`${colors.headerBG} text-white font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600`}
-            >
-              💻
-            </button>
-          </fetcher.Form>
-          <hr />
         </div>
 
         <div className={`flex-1 p-6 ${colors.mainBG} ${colors.maintext} overflow-y-auto	`} >
