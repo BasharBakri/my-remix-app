@@ -1,9 +1,16 @@
 import { refineSearchTerm } from "~/models/ai/searchbot.server";
 import { json, redirect } from "@remix-run/server-runtime";
 import { themeify } from "~/models/ai/themechanger.server";
+
+
 import { useEffect, useRef } from "react";
+import Loading from "~/components/Loader";
+
 import { requireUserId } from "~/session.server";
 import { useUser } from "~/utils";
+
+
+
 import { createTheme } from "~/models/theme.server";
 import { getTheme } from "~/models/theme.server";
 
@@ -76,9 +83,9 @@ export default function NewsPage() {
   const user = useUser();
 
   console.log('action Data', actionData);
-  const formRef = useRef();
+  const themeFormRef = useRef();
   useEffect(() => {
-    formRef.current.reset();
+    themeFormRef.current.reset();
   }, [fetcher.data]);
 
 
@@ -128,8 +135,8 @@ export default function NewsPage() {
           {console.log(colors.sideBG)}
           <Form method="post" className="flex items-center mt-3">
             <input type="text" name="search" placeholder="search" className=" border-2 border-gray-300 rounded-l-md py-2 px-4 w-full focus:outline-none focus:border-gray-500 text-black" />
-            <button type="submit" name="_action" value="searchBar" className="bg-gray-500 text-white font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600">
-              {isSubmitting ? "🔎..." : "🔍"}</button>
+            <button disabled={isSubmitting} type="submit" name="_action" value="searchBar" className={`${colors.headerBG} text-white font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600`}>
+              {isSubmitting ? <Loading></Loading> : "🔍"}</button>
           </Form>
           <hr />
           <ol>
@@ -147,7 +154,7 @@ export default function NewsPage() {
             <li>
               <NavLink
                 className={({ isActive }) =>
-                  `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                  `block border-b p-4 text-xl ${isActive ? colors.mainBG : ""}`
                 }
                 to='trending'
               >
@@ -157,7 +164,7 @@ export default function NewsPage() {
             <li>
               <NavLink
                 className={({ isActive }) =>
-                  `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                  `block border-b p-4 text-xl ${isActive ? colors.mainBG : ""}`
                 }
                 to='category'
               >
@@ -167,7 +174,7 @@ export default function NewsPage() {
             <li >
               <NavLink
                 className={({ isActive }) =>
-                  `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                  `block border-b p-4 text-xl ${isActive ? colors.mainBG : ""}`
                 }
                 to='country'
               >
@@ -177,7 +184,7 @@ export default function NewsPage() {
 
 
           </ol>
-          <fetcher.Form ref={formRef} method="post" className="flex items-center mt-4">
+          <fetcher.Form ref={themeFormRef} method="post" className="flex items-center mt-4">
             <input
 
               type="text"
@@ -188,7 +195,7 @@ export default function NewsPage() {
               type="submit"
               name="_action"
               value="theme"
-              className="bg-gray-500 text-white font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600"
+              className={`${colors.headerBG} text-white font-bold py-2 px-4 rounded-r-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600`}
             >
               💻
             </button>
