@@ -66,6 +66,11 @@ export async function action({ request }) {
         return json(gptColors);
       }
     }
+    if (_action === "delete") {
+      const userId = await requireUserId(request);
+      await deleteAllSearches({ userId });
+      return null;
+    }
   }
 }
 
@@ -74,13 +79,9 @@ export async function loader({ request }) {
   const now = new Date();
 
   try {
-    // await deleteAllSearches({ userId });  In case of emergency uncomment
     const allSearches = await getAllSearches({ userId });
 
-    //delete at 7 for checking
-    if (allSearches.length >= 7) {
-      await deleteAllSearches({ userId });
-    }
+
     const latestSearch = allSearches[0];
 
 
@@ -118,7 +119,8 @@ export default function NewsPage() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
   const fetcher = useFetcher();
-  console.log('fetcherData', fetcher.data);
+  const fetcherLoading = fetcher.state === 'submitting';
+  console.log('fetcherLoading', fetcher.fetcherLoading);
   const loaderData = useLoaderData();
   const user = useUser();
   const jsonPage = loaderData?.personalizedPage || null;
@@ -138,10 +140,7 @@ export default function NewsPage() {
     finalgptColors = JSON.parse(fetcher.data);
     console.log('97', finalgptColors);
 
-  } else {
-    console.log('didnt work');
   }
-
   let personalPage;
 
   if (jsonPage) {
@@ -175,9 +174,10 @@ export default function NewsPage() {
   const finalPage = personalPage ? personalPage : defaultPage;
 
 
+
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <header className={`flex items-center justify-between ${colors.headerBG} p-4 ${colors.headertext}`}>
+      <header className={` flex items-center justify-between ${colors.headerBG} p-4 ${colors.headertext}`}>
         <h1 className="text-3xl font-bold">
           <Link to=".">{finalPage.websiteTitle}</Link>
         </h1>
@@ -206,7 +206,7 @@ export default function NewsPage() {
                 className={`block border p-4 text-xs ${isSubmitting ? 'animate-blink' : ''}`}
                 to='.'
               >
-                {loaderData?.latestSearch ? <p>🔍Results for {loaderData?.latestSearch?.botSearchString}</p> : <p>🔍&nbsp;</p>}
+                {loaderData?.latestSearch ? <p>🔍Results for {loaderData?.latestSearch?.userSearchString}</p> : <p>🔍&nbsp;</p>}
               </NavLink>
             </li>
             <li>
@@ -238,13 +238,13 @@ export default function NewsPage() {
               </NavLink>
             </li>
             <fetcher.Form ref={themeFormRef} method="post" className="flex items-center p-4">
-              <input
+              <input disabled={fetcherLoading}
 
                 type="text"
                 placeholder="Describe your Theme!" name="themeInput"
                 className="border-2 border-gray-300 rounded-l-md py-2 px-4 w-60 focus:outline-none focus:border-gray-500 text-black"
               />
-              <button
+              <button disabled={fetcherLoading}
                 type="submit"
                 name="_action"
                 value="theme"
@@ -257,15 +257,28 @@ export default function NewsPage() {
             <p className="p-4">Search History for: {user.email}</p>
             <hr />
             {loaderData.allSearches && loaderData.allSearches.map((search) => (
-              <li key={search.id}>
-                <NavLink
-                  className={({ isActive }) =>
-                    `block border-b p-4 text-xl ${isActive ? colors.mainBG : ""}`
-                  }
-                  to={search.botSearchString}
-                >
-                  {search.userSearchString}
-                </NavLink>
+              <li key={search.id} className="border-b">
+                <div className="flex items-center justify-between">
+                  <NavLink
+                    className={({ isActive }) =>
+                      `block p-4 text-xl ${isActive ? colors.mainBG : ""}`
+                    }
+                    to={search.botSearchString}
+                  >
+                    {search.botSearchString}
+                  </NavLink>
+
+
+                  <fetcher.Form method="post" className="p-4">
+
+                    <input type="hidden" name="id" value={search.id} />
+
+
+                    <button type="submit" name="_action" value="delete" className="text-xl">
+                      ❌
+                    </button>
+                  </fetcher.Form>
+                </div>
               </li>
             ))}
 

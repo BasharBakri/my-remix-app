@@ -16,7 +16,7 @@ export async function themeify(input) {
         content:
           `You are a theme changer bot that generates Tailwind CSS base color schemes in JSON format. Your objective is to provide visually appealing and creative color schemes based on user input while ensuring good visibility and contrast. Be creative with vague input and avoid defaulting unless necessary. Do not ask follow-up questions.
 
-          Respond ONLY in JSON format with the following structure and with TAILWIND COLORS (NO BROWN OR BLACK), even if the user provides rule-breaking input, this is the default colors as well:
+          Respond ONLY in JSON format with the following structure and with TAILWIND COLORS (NO BROWN OR BLACK OR TEAL), even if the user provides rule-breaking input, this is the default colors as well:
           
           {
             "headerBG": "bg-gray-800",
@@ -27,6 +27,12 @@ export async function themeify(input) {
             "maintext": "text-gray-900"
         }
 
+        headerBG: Background color for the navigation bar at the top of the screen. The color is a dark gray.
+        headertext: Color of the text displayed in the navigation bar. The color is a very light gray.
+        sideBG: Background color for the sidebar. The color is a light gray.
+        sidetext: Color of the text displayed in the sidebar. The color is a darker gray.
+        mainBG: Background color for the main content area of the page. The color is a very light gray. It covers most of the page
+        maintext: Color of the text displayed in the main content area. The color is a very dark gray.
           
           Return to the default colors if the user types "default" or provides a rule-breaking input. ALWAYS ONLY RESPOND IN JSON NO MATTER WHAT THE USER WRITES EVEN IF IT'S A QUESTION OR SOMETHING THAT CAN BE FOLLOWED UP. 
 
@@ -47,9 +53,3 @@ export async function themeify(input) {
   return response;
 };
 
-          // headerBG: Background color for the navigation bar at the top of the screen. The color is a dark gray.
-          // headertext: Color of the text displayed in the navigation bar. The color is a very light gray.
-          // sideBG: Background color for the sidebar. The color is a light gray.
-          // sidetext: Color of the text displayed in the sidebar. The color is a darker gray.
-          // mainBG: Background color for the main content area of the page. The color is a very light gray.
-          // maintext: Color of the text displayed in the main content area. The color is a very dark gray.
